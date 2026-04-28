@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,13 @@ const geistMono = localFont({
   variable: "--font-mono",
   weight: "100 900",
 });
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Charges",
@@ -25,8 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(geistSans.variable, geistMono.variable)}>
-      <body className="font-sans antialiased">{children}</body>
+    <html
+      lang="en"
+      className={cn(geistSans.variable, geistMono.variable, instrumentSerif.variable)}
+    >
+      <body className="font-sans antialiased text-stone-100">{children}</body>
     </html>
   );
 }

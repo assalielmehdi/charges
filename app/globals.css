@@ -5,6 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* shadcn tokens kept while legacy components still mount; will be removed once
+     the migration replaces them. The new design uses raw stone-* + #0a0908. */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -74,13 +76,35 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  html,
+  body {
+    min-height: 100%;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: #0a0908;
+    background-image: radial-gradient(ellipse at top, #1c1917 0%, #0a0908 60%);
+    background-attachment: fixed;
+    color: var(--color-stone-100, #f5f5f4);
+    font-family: var(--font-sans), system-ui, sans-serif;
   }
+}
+
+@layer utilities {
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+}
+
+@keyframes scanLine {
+  0%   { top: 0; }
+  50%  { top: calc(100% - 4px); }
+  100% { top: 0; }
 }
