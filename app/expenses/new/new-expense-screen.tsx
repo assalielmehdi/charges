@@ -231,7 +231,7 @@ export function NewExpenseScreen({
         )}
       </div>
 
-      {state.message && !state.ok ? (
+      {state?.message && !state.ok ? (
         <p className="px-5 pb-2 text-[13px] text-rose-300/80 tracking-tight">
           {state.message}
         </p>
