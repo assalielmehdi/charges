@@ -1,14 +1,12 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
-// Note: createExpense intentionally does NOT call redirect(). Returning a
-// success state lets the client navigate, which is the only reliable way to
-// close an intercepted-route modal (server-action redirects from inside a
-// parallel @modal slot don't unmount the slot consistently).
+// All actions return state instead of redirecting. The intercepted-modal
+// route can't reliably close itself when a server action redirects from
+// inside the @modal slot — the client navigates instead.
 
 export type ExpenseActionState = { ok: boolean; message: string | null };
 
@@ -65,7 +63,7 @@ export async function createExpense(
 export async function updateExpense(
   id: string,
   _prev: ExpenseActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ExpenseActionState> {
   const parsed = parseFields(formData);
   if (typeof parsed === "string") return { ok: false, message: parsed };
@@ -85,17 +83,20 @@ export async function updateExpense(
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
 
   revalidatePath("/");
-  redirect("/");
+  revalidatePath(`/expenses/${id}`);
+  return { ok: true, message: null };
 }
 
-export async function deleteExpense(id: string): Promise<void> {
+export async function deleteExpense(
+  id: string,
+  _prev: ExpenseActionState,
+  _formData: FormData,
+): Promise<ExpenseActionState> {
   const supabase = createClient(cookies());
   const { error } = await supabase.from("expenses").delete().eq("id", id);
   if (error) {
-    // Surface as a thrown error — caller is the edit page form, so we want
-    // it to fail loudly rather than silently navigate away.
-    throw new Error(`Delete failed: ${error.message}`);
+    return { ok: false, message: `Delete failed: ${error.message}` };
   }
   revalidatePath("/");
-  redirect("/");
+  return { ok: true, message: null };
 }
