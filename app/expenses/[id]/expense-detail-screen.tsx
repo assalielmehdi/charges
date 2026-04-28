@@ -25,7 +25,6 @@ import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 import { Sheet } from "@/components/ui/sheet";
-import { StatusBar } from "@/components/ui/status-bar";
 import { cn } from "@/lib/utils";
 import { colorForCategoryId } from "@/lib/palette";
 import { formatAmountPlain } from "@/lib/format";
@@ -159,7 +158,6 @@ function DetailView({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
-      <StatusBar />
       <ScreenHeader
         left={
           <IconButton type="button" onClick={onBack} aria-label="Back">
@@ -339,7 +337,6 @@ function EditView({
       <input type="hidden" name="merchant" value={merchant} />
       <input type="hidden" name="notes" value={notes} />
 
-      <StatusBar />
       <ScreenHeader
         label="Edit expense"
         left={

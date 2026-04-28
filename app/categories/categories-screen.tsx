@@ -12,7 +12,6 @@ import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 import { Sheet } from "@/components/ui/sheet";
-import { StatusBar } from "@/components/ui/status-bar";
 import { colorForCategoryId, PALETTE } from "@/lib/palette";
 import {
   createCategory,
@@ -39,7 +38,6 @@ export function CategoriesScreen({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
-      <StatusBar />
       <ScreenHeader
         left={
           <IconButton

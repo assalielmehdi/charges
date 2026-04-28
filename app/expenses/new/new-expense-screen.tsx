@@ -18,7 +18,6 @@ import { IconButton } from "@/components/ui/icon-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
-import { StatusBar } from "@/components/ui/status-bar";
 import { cn } from "@/lib/utils";
 import { colorForCategoryId } from "@/lib/palette";
 import { createExpense, type ExpenseActionState } from "../actions";
@@ -107,7 +106,6 @@ export function NewExpenseScreen({
       <input type="hidden" name="merchant" value={merchant} />
       <input type="hidden" name="notes" value={notes} />
 
-      <StatusBar />
       <ScreenHeader
         label="New expense"
         right={

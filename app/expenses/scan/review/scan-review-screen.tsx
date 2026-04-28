@@ -17,7 +17,6 @@ import { IconButton } from "@/components/ui/icon-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
-import { StatusBar } from "@/components/ui/status-bar";
 import { cn } from "@/lib/utils";
 import { colorForCategoryId } from "@/lib/palette";
 import { createClient } from "@/utils/supabase/client";
@@ -169,7 +168,6 @@ export function ScanReviewScreen({
   if (!hydrated) {
     return (
       <div className="flex flex-col flex-1 min-h-0 w-full">
-        <StatusBar />
         <ScreenHeader
           label="Review extraction"
           left={
@@ -188,7 +186,6 @@ export function ScanReviewScreen({
   if (!stashed) {
     return (
       <div className="flex flex-col flex-1 min-h-0 w-full">
-        <StatusBar />
         <ScreenHeader
           label="Review extraction"
           left={
@@ -235,7 +232,6 @@ export function ScanReviewScreen({
         <input type="hidden" name="category_id" value={categoryId} />
         <input type="hidden" name="merchant" value={merchant} />
 
-        <StatusBar />
         <ScreenHeader
           label="Review extraction"
           left={

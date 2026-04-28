@@ -6,7 +6,6 @@ import { Camera, Loader, Sparkles, Upload, X } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
-import { StatusBar } from "@/components/ui/status-bar";
 
 type ScanResponse = {
   id: string;
@@ -64,7 +63,6 @@ export function ScanCaptureScreen() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
-      <StatusBar />
       <ScreenHeader
         label={pending ? "Reading receipt" : "Scan receipt"}
         right={
