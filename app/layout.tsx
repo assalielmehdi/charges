@@ -29,15 +29,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   return (
     <html
       lang="en"
       className={cn(geistSans.variable, geistMono.variable, instrumentSerif.variable)}
     >
-      <body className="font-sans antialiased text-stone-100">{children}</body>
+      <body className="font-sans antialiased text-stone-100">
+        {children}
+        {modal}
+      </body>
     </html>
   );
 }
