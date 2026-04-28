@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
+// Note: createExpense intentionally does NOT call redirect(). Returning a
+// success state lets the client navigate, which is the only reliable way to
+// close an intercepted-route modal (server-action redirects from inside a
+// parallel @modal slot don't unmount the slot consistently).
+
 export type ExpenseActionState = { ok: boolean; message: string | null };
 
 type ParsedFields = {
@@ -54,7 +59,7 @@ export async function createExpense(
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
 
   revalidatePath("/");
-  redirect("/");
+  return { ok: true, message: null };
 }
 
 export async function updateExpense(

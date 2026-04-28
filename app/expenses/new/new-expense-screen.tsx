@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import {
@@ -64,6 +64,13 @@ export function NewExpenseScreen({
 }) {
   const router = useRouter();
   const [state, formAction] = useFormState(createExpense, initialState);
+
+  useEffect(() => {
+    if (state?.ok) {
+      router.push("/");
+      router.refresh();
+    }
+  }, [state, router]);
 
   const [amount, setAmount] = useState("0");
   const [date, setDate] = useState(defaultDate);
