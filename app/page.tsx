@@ -80,12 +80,20 @@ export default async function Home({
         </form>
       </header>
 
-      <Link
-        href="/expenses/new"
-        className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-      >
-        + Add expense
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href="/expenses/new"
+          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          + Add expense
+        </Link>
+        <Link
+          href="/expenses/scan"
+          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium hover:bg-muted"
+        >
+          Scan receipt
+        </Link>
+      </div>
 
       <Filters
         categories={categories}

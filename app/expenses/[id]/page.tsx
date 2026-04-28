@@ -21,7 +21,7 @@ export default async function EditExpensePage({
   const [{ data: expense }, { data: categories }] = await Promise.all([
     supabase
       .from("expenses")
-      .select("id, amount, date, category_id, merchant, notes")
+      .select("id, amount, date, category_id, merchant, notes, photo_path")
       .eq("id", params.id)
       .maybeSingle(),
     supabase
@@ -32,6 +32,14 @@ export default async function EditExpensePage({
 
   if (!expense) notFound();
 
+  let photoUrl: string | null = null;
+  if (expense.photo_path) {
+    const { data: signed } = await supabase.storage
+      .from("receipts")
+      .createSignedUrl(expense.photo_path, 600);
+    photoUrl = signed?.signedUrl ?? null;
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 p-6">
       <header className="flex items-center justify-between">
@@ -40,6 +48,14 @@ export default async function EditExpensePage({
           Back
         </Link>
       </header>
+      {photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL, not worth configuring next/image remote patterns
+        <img
+          src={photoUrl}
+          alt="Receipt"
+          className="max-h-72 w-full rounded-lg border border-border object-contain"
+        />
+      ) : null}
       <EditForm
         id={expense.id}
         categories={categories ?? []}
