@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { ScanCaptureScreen } from "./scan-capture-screen";
+import { ModalShell } from "@/components/shell/modal-shell";
+import { ScanCaptureScreen } from "@/app/expenses/scan/scan-capture-screen";
 
 export const dynamic = "force-dynamic";
 
-export default async function ScanPage() {
+export default async function InterceptedScanPage() {
   const supabase = createClient(cookies());
   const {
     data: { user },
@@ -13,8 +14,8 @@ export default async function ScanPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <ModalShell>
       <ScanCaptureScreen />
-    </div>
+    </ModalShell>
   );
 }
