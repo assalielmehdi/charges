@@ -3,16 +3,12 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryGlyph } from "@/components/ui/category-glyph";
 import { DottedDivider } from "@/components/ui/dotted-divider";
 import { HeroAmount } from "@/components/ui/hero-amount";
 import { Pill } from "@/components/ui/pill";
 import { SectionLabel } from "@/components/ui/section-label";
-import {
-  SparklineDayStrip,
-  type DayTotal,
-} from "@/components/ui/sparkline-day-strip";
 import { cn } from "@/lib/utils";
 import { colorForCategoryId } from "@/lib/palette";
 import { formatAmountPlain } from "@/lib/format";
@@ -38,22 +34,16 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function dayOfMonth(iso: string): number {
-  return Number(iso.split("-")[2]);
-}
-
 export function LedgerView({
   expenses,
   categories,
   monthISO,
-  selectedDay,
   activeCategoryId,
   todayISO,
 }: {
   expenses: Expense[];
   categories: Category[];
   monthISO: string; // YYYY-MM
-  selectedDay: number | null;
   activeCategoryId: string | null;
   todayISO: string;
 }) {
@@ -62,32 +52,13 @@ export function LedgerView({
   const [, startTransition] = useTransition();
 
   const [year, month] = monthISO.split("-").map(Number);
-  const daysInMonth = new Date(year, month, 0).getDate();
-
   const [todayY, todayM, todayD] = todayISO.split("-").map(Number);
-  const isCurrentMonth = todayY === year && todayM === month;
-  const todayDay = isCurrentMonth ? todayD : null;
   const canGoNext = !(year === todayY && month >= todayM);
 
-  const dailyTotals: DayTotal[] = useMemo(() => {
-    const arr: DayTotal[] = Array.from({ length: daysInMonth }, (_, i) => ({
-      day: i + 1,
-      total: 0,
-    }));
-    for (const e of expenses) {
-      const d = dayOfMonth(e.date);
-      if (d >= 1 && d <= daysInMonth) arr[d - 1].total += Number(e.amount);
-    }
-    return arr;
-  }, [expenses, daysInMonth]);
-
   const filtered = useMemo(() => {
-    return expenses.filter((e) => {
-      if (activeCategoryId && e.category_id !== activeCategoryId) return false;
-      if (selectedDay && dayOfMonth(e.date) !== selectedDay) return false;
-      return true;
-    });
-  }, [expenses, activeCategoryId, selectedDay]);
+    if (!activeCategoryId) return expenses;
+    return expenses.filter((e) => e.category_id === activeCategoryId);
+  }, [expenses, activeCategoryId]);
 
   const total = filtered.reduce((s, e) => s + Number(e.amount), 0);
   const avg = filtered.length ? total / filtered.length : 0;
@@ -114,11 +85,7 @@ export function LedgerView({
   function changeMonth(delta: number) {
     const next = new Date(year, month - 1 + delta, 1);
     const m = `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
-    setQuery({ month: m, day: null });
-  }
-
-  function selectDay(d: number | null) {
-    setQuery({ day: d === null ? null : String(d) });
+    setQuery({ month: m });
   }
 
   function setCategoryFilter(id: string | null) {
@@ -126,7 +93,6 @@ export function LedgerView({
   }
 
   const findCat = (id: string) => categories.find((c) => c.id === id);
-  const heroLabel = selectedDay ? `Total · day ${selectedDay}` : "Total this month";
 
   function dayLabel(iso: string): string {
     if (iso === todayISO) return "Today";
@@ -145,31 +111,38 @@ export function LedgerView({
 
   return (
     <div className="pt-3 md:pt-0">
-      <SparklineDayStrip
-        dailyTotals={dailyTotals}
-        selectedDay={selectedDay}
-        onSelectDay={selectDay}
-        monthLabel={MONTH_NAMES[month - 1]}
-        year={year}
-        onPrevMonth={() => changeMonth(-1)}
-        onNextMonth={() => changeMonth(1)}
-        canGoNext={canGoNext}
-        todayDay={todayDay}
-      />
+      <div className="flex items-center justify-between px-6 md:px-0">
+        <button
+          type="button"
+          onClick={() => changeMonth(-1)}
+          className="w-8 h-8 rounded-full hover:bg-white/[0.04] flex items-center justify-center text-stone-400 transition"
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2 text-stone-200">
+          <span className="text-[14px] tracking-tight">
+            {MONTH_NAMES[month - 1]}
+          </span>
+          <span className="text-[14px] tracking-tight text-stone-500">
+            {year}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => changeMonth(1)}
+          disabled={!canGoNext}
+          className="w-8 h-8 rounded-full hover:bg-white/[0.04] flex items-center justify-center text-stone-400 transition disabled:hover:bg-transparent"
+          aria-label="Next month"
+        >
+          <ChevronRight
+            className={cn("w-4 h-4", !canGoNext && "opacity-30")}
+          />
+        </button>
+      </div>
 
       <div className="mt-7 px-6 md:px-0">
-        <div className="flex items-baseline justify-between">
-          <SectionLabel>{heroLabel}</SectionLabel>
-          {selectedDay !== null && (
-            <button
-              type="button"
-              onClick={() => selectDay(null)}
-              className="text-[11px] text-stone-400 hover:text-stone-200 flex items-center gap-1 tracking-tight"
-            >
-              <X className="w-3 h-3" /> Clear day
-            </button>
-          )}
-        </div>
+        <SectionLabel>Total this month</SectionLabel>
         <div className="mt-2">
           <HeroAmount value={total} size="lg" />
         </div>

@@ -39,7 +39,6 @@ export function DesktopSidebar({
     const params = new URLSearchParams(searchParams.toString());
     if (id) params.set("category", id);
     else params.delete("category");
-    params.delete("day"); // changing category clears the day filter
     const qs = params.toString();
     startTransition(() => router.push(qs ? `/?${qs}` : "/"));
   }

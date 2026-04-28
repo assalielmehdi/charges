@@ -31,7 +31,7 @@ function pickParam(v: string | string[] | undefined): string | null {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { month?: string; day?: string; category?: string };
+  searchParams: { month?: string; category?: string };
 }) {
   const supabase = createClient(cookies());
 
@@ -42,9 +42,6 @@ export default async function Home({
 
   const monthISO = pickParam(searchParams.month) ?? currentMonthISO();
   const range = monthRangeFromISO(monthISO);
-
-  const dayParam = pickParam(searchParams.day);
-  const selectedDay = dayParam && /^\d+$/.test(dayParam) ? Number(dayParam) : null;
   const activeCategoryId = pickParam(searchParams.category);
 
   const [{ data: catRows }, { data: expensesData, error }] = await Promise.all([
@@ -118,7 +115,6 @@ export default async function Home({
               expenses={expenses}
               categories={categories}
               monthISO={monthISO}
-              selectedDay={selectedDay}
               activeCategoryId={activeCategoryId}
               todayISO={todayISO()}
             />
