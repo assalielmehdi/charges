@@ -1,10 +1,13 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import type { ExpenseActionState } from "../actions";
+
+// Both actions return state instead of redirecting. The intercepted-modal
+// route can't reliably close itself when a server action redirects from
+// inside the @modal slot — the client navigates instead (see new-expense-screen).
 
 type ParsedFields = {
   amount: number;
@@ -84,10 +87,13 @@ export async function saveScanned(
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
 
   revalidatePath("/");
-  redirect("/");
+  return { ok: true, message: null };
 }
 
-export async function discardScan(formData: FormData): Promise<void> {
+export async function discardScan(
+  _prev: ExpenseActionState,
+  formData: FormData,
+): Promise<ExpenseActionState> {
   const photoPath = String(formData.get("photo_path") ?? "").trim();
 
   const supabase = createClient(cookies());
@@ -99,5 +105,5 @@ export async function discardScan(formData: FormData): Promise<void> {
     await supabase.storage.from("receipts").remove([photoPath]);
   }
 
-  redirect("/");
+  return { ok: true, message: null };
 }
