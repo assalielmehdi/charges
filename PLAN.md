@@ -13,7 +13,7 @@ Tracking monthly purchases is currently ad-hoc. Need a single place to log:
 ## MVP scope
 
 In:
-1. Login page (passcode) + auth cookie middleware.
+1. Login page (Supabase Auth, magic link to a single allowlisted email) + middleware that gates every route.
 2. Manual entry of an expense.
 3. Scan/upload an invoice — Claude vision extracts fields, user reviews before save.
 4. Tag a purchase with a single category (seeded list, user-extensible).
@@ -38,7 +38,7 @@ Explicitly out (v2 candidates):
 | Area | Decision |
 |---|---|
 | Form factor | Web + PWA (camera access, install-to-homescreen). |
-| Audience | Single user. No signup. Passcode + HMAC-signed cookie + `middleware.ts`. |
+| Audience | Single user. Supabase Auth (magic link to email), single allowlisted email enforced server-side. `middleware.ts` redirects unauthenticated requests to `/login`. |
 | Scanning | Claude vision LLM. Language-agnostic prompt (Arabic / French / English). Always review-before-save. |
 | Currency | MAD only. Single `amount` column. |
 | Recurring expenses | Manual entry like any other expense (no templates in MVP). |
@@ -74,7 +74,7 @@ Plus a `categories(id, name, icon?, color?)` table seeded on first run.
 - **Storage:** Supabase Storage, private `receipts/` bucket.
 - **LLM:** Anthropic SDK. `claude-opus-4-7` for vision (or `claude-haiku-4-5-20251001` if cost matters — Haiku is sufficient for receipt parsing).
 - **Hosting:** Vercel (Hobby tier).
-- **Auth:** none. Single passcode env var → `/login` sets HMAC-signed cookie (90-day expiry) → `middleware.ts` rejects unauthenticated requests on every route. API routes also check the cookie defensively.
+- **Auth:** Supabase Auth via `@supabase/ssr` (magic link / email OTP). Allowlist of one email is enforced in the `/login` server action (compare against `APP_AUTHORIZED_EMAIL`) and in the Supabase dashboard (signups disabled, single user invited). `middleware.ts` refreshes the Supabase session cookie on every request and redirects unauthenticated traffic to `/login`. RLS is enabled on all tables and policies allow the `authenticated` role only.
 
 ## Safety rails
 
@@ -85,7 +85,7 @@ Plus a `categories(id, name, icon?, color?)` table seeded on first run.
 ## Build order (milestones)
 
 1. ~~**Skeleton.** `git init`, Next.js + Tailwind + shadcn scaffold, Supabase project, deploy a "hello world" to Vercel. Confirms the pipe works end-to-end.~~ ✅ Local scaffold done (Next.js 14 App Router + TS, Tailwind v4, shadcn `Button` rendering at `/`). Remaining external steps for the user: create Supabase project, push repo to GitHub, deploy on Vercel.
-2. **Auth + schema.** Postgres schema (`expenses`, `categories`), seed categories, `/login` passcode page, `middleware.ts`, HMAC cookie.
+2. ~~**Auth + schema.** Postgres schema (`expenses`, `categories`), seed categories, RLS enabled, `/login` magic-link page (Supabase Auth via `@supabase/ssr`), `/auth/callback` route, `middleware.ts` refreshes session and gates every route, single-email allowlist enforced server-side.~~ ✅ Migrations applied (`0001_init.sql`, `0002_auth_rls.sql`), Supabase Auth configured (signups disabled, single user invited, Site URL + wildcard redirects), env vars set in `.env.local` and Vercel. End-to-end magic-link login verified locally.
 3. **Manual entry + list.** Add-expense form (amount required, date defaults today, category chips). Flat chronological list. *App is already useful here — start logging real expenses.*
 4. **Edit/delete + filters.** Tap a row to edit/delete; filter list by category and date range.
 5. **Categories management.** Settings page to add/rename/delete categories.
@@ -99,5 +99,5 @@ Principles baked into the order:
 ## Risks & open flags
 
 - **Scan-review form is more UX work than it sounds** — date picker, category chip selector, currency-formatted amount input, photo preview, all on mobile. Budget extra time for milestone 6.
-- **Vercel URLs are scanned by bots within hours of deploy.** The passcode gate is non-optional from milestone 1 onward — never deploy a route that calls Anthropic without checking the auth cookie.
+- **Vercel URLs are scanned by bots within hours of deploy.** The Supabase Auth + email-allowlist gate is non-optional from milestone 1 onward — never deploy a route that calls Anthropic without confirming `supabase.auth.getUser()` returns a real, allowlisted user.
 - **Prompt iteration is the moat.** Spend time on the vision prompt: explicit JSON schema, currency = MAD assumption, languages = AR/FR/EN, instruct it to return `null` for fields it can't read confidently rather than guessing.
