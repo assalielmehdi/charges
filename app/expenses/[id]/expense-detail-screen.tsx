@@ -322,10 +322,6 @@ function EditView({
     if (state?.ok) onSaved();
   }, [state, onSaved]);
 
-  const [whole, dec] = amount.includes(".")
-    ? amount.split(".")
-    : [amount, null];
-
   return (
     <form
       action={formAction}
@@ -357,14 +353,9 @@ function EditView({
                 const v = e.target.value;
                 if (/^[0-9]*\.?[0-9]*$/.test(v)) setAmount(v || "0");
               }}
-              className="hidden md:block font-serif italic text-stone-100 text-[64px] leading-[0.95] tracking-tight bg-transparent outline-none w-full max-w-[260px]"
+              aria-label="Amount"
+              className="font-serif italic text-stone-100 text-[64px] leading-[0.95] tracking-tight bg-transparent outline-none w-full max-w-[260px] border-b border-transparent focus:border-white/20 transition"
             />
-            <span className="md:hidden font-serif italic text-stone-100 text-[64px] leading-[0.95] tracking-tight">
-              {whole}
-              {dec !== null && (
-                <span className="text-stone-500">.{dec}</span>
-              )}
-            </span>
             <span className="text-stone-500 text-[15px] tracking-[0.15em]">
               MAD
             </span>

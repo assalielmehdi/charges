@@ -1,19 +1,19 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 export type LoginState = { ok: boolean; message: string | null };
 
-export async function sendMagicLink(
+export async function signInWithPassword(
   _prev: LoginState,
   formData: FormData
 ): Promise<LoginState> {
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
-  const next = String(formData.get("next") ?? "/");
+  const password = String(formData.get("password") ?? "");
   const allowed = process.env.APP_AUTHORIZED_EMAIL?.trim().toLowerCase();
 
   if (!allowed) {
@@ -22,38 +22,25 @@ export async function sendMagicLink(
   if (!email) {
     return { ok: false, message: "Enter your email." };
   }
+  if (!password) {
+    return { ok: false, message: "Enter your password." };
+  }
 
   // Single-user app: refuse anything not on the allowlist before contacting Supabase.
   if (email !== allowed) {
-    return {
-      ok: true,
-      message: "If that email is allowed, a magic link is on its way.",
-    };
+    return { ok: false, message: "Invalid email or password." };
   }
 
-  const h = headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-  const proto =
-    h.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-  const base = `${proto}://${host}`;
-  const redirectTo = `${base}/auth/callback?next=${encodeURIComponent(
-    next.startsWith("/") ? next : "/"
-  )}`;
-
   const supabase = createClient(cookies());
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
-    options: { emailRedirectTo: redirectTo },
+    password,
   });
 
   if (error) {
-    return { ok: false, message: `Auth error: ${error.message}` };
+    return { ok: false, message: "Invalid email or password." };
   }
-  return {
-    ok: true,
-    message: "Magic link sent. Check your inbox.",
-  };
+  return { ok: true, message: null };
 }
 
 export async function logout(): Promise<void> {

@@ -17,8 +17,7 @@ export default function LoginPage({
           ledger.
         </h1>
         <p className="mt-5 text-stone-400 text-[15px] leading-relaxed max-w-[320px]">
-          Sign in with the email on your allowlist. We&rsquo;ll send you a
-          magic link.
+          Sign in with the email on your allowlist and your password.
         </p>
       </div>
 
