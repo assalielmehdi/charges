@@ -92,6 +92,8 @@ export async function deleteExpense(
   _prev: ExpenseActionState,
   _formData: FormData,
 ): Promise<ExpenseActionState> {
+  void _prev;
+  void _formData;
   const supabase = createClient(cookies());
   const { error } = await supabase.from("expenses").delete().eq("id", id);
   if (error) {
