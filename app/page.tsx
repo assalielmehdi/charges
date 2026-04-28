@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Plus, ScanLine } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
-import { currentMonthRange, formatAmount, formatDate } from "@/lib/format";
+import { currentMonthISO, monthRangeFromISO, todayISO } from "@/lib/format";
+import { DesktopSidebar } from "@/components/shell/desktop-sidebar";
+import { MobileTopBar } from "@/components/shell/mobile-top-bar";
+import { MobileBottomBar } from "@/components/shell/mobile-bottom-bar";
+import { LedgerView } from "./ledger-view";
 import { logout } from "./login/actions";
-import { Filters } from "./filters";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +18,8 @@ type ExpenseRow = {
   date: string;
   merchant: string | null;
   notes: string | null;
-  categories: { name: string } | null;
+  category_id: string;
+  source: "manual" | "scan";
 };
 
 function pickParam(v: string | string[] | undefined): string | null {
@@ -27,7 +31,7 @@ function pickParam(v: string | string[] | undefined): string | null {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { category?: string; from?: string; to?: string };
+  searchParams: { month?: string; day?: string; category?: string };
 }) {
   const supabase = createClient(cookies());
 
@@ -36,117 +40,93 @@ export default async function Home({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const monthDefault = currentMonthRange();
-  const category = pickParam(searchParams.category);
-  const from = pickParam(searchParams.from) ?? monthDefault.from;
-  const to = pickParam(searchParams.to) ?? monthDefault.to;
+  const monthISO = pickParam(searchParams.month) ?? currentMonthISO();
+  const range = monthRangeFromISO(monthISO);
 
-  const [{ data: categoryRows }, expensesRes] = await Promise.all([
+  const dayParam = pickParam(searchParams.day);
+  const selectedDay = dayParam && /^\d+$/.test(dayParam) ? Number(dayParam) : null;
+  const activeCategoryId = pickParam(searchParams.category);
+
+  const [{ data: catRows }, { data: expensesData, error }] = await Promise.all([
     supabase
       .from("categories")
       .select("id, name")
       .order("sort_order", { ascending: true }),
-    (() => {
-      let q = supabase
-        .from("expenses")
-        .select("id, amount, date, merchant, notes, categories(name)")
-        .gte("date", from)
-        .lte("date", to)
-        .order("date", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (category) q = q.eq("category_id", category);
-      return q;
-    })(),
+    supabase
+      .from("expenses")
+      .select("id, amount, date, merchant, notes, category_id, source")
+      .gte("date", range.from)
+      .lte("date", range.to)
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(500),
   ]);
 
-  const { data, error } = expensesRes;
-  const expenses = (data ?? []) as unknown as ExpenseRow[];
-  const categories = categoryRows ?? [];
+  const expenses = (expensesData ?? []) as ExpenseRow[];
+  const categories = catRows ?? [];
 
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+  const countsById: Record<string, number> = {};
+  for (const e of expenses) {
+    countsById[e.category_id] = (countsById[e.category_id] ?? 0) + 1;
+  }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Charges</h1>
-          <p className="text-xs text-muted-foreground">{user.email}</p>
-        </div>
-        <form action={logout}>
-          <Button type="submit" variant="ghost" size="sm">
-            Log out
-          </Button>
-        </form>
-      </header>
-
-      <div className="flex gap-2">
-        <Link
-          href="/expenses/new"
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          + Add expense
-        </Link>
-        <Link
-          href="/expenses/scan"
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium hover:bg-muted"
-        >
-          Scan receipt
-        </Link>
-      </div>
-
-      <Filters
+    <div className="md:grid md:grid-cols-[260px_1fr] md:h-screen">
+      <DesktopSidebar
         categories={categories}
-        current={{ category, from, to }}
+        countsById={countsById}
+        totalCount={expenses.length}
+        activeCategoryId={activeCategoryId}
+        logoutAction={logout}
       />
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          {expenses.length} {expenses.length === 1 ? "entry" : "entries"}
-        </span>
-        <span className="font-semibold tabular-nums text-foreground">
-          {formatAmount(total)}
-        </span>
-      </div>
+      <main className="flex flex-col min-h-screen md:h-screen md:overflow-y-auto relative">
+        <MobileTopBar logoutAction={logout} />
 
-      {error ? (
-        <p className="text-sm text-destructive">Failed to load: {error.message}</p>
-      ) : expenses.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          No expenses match these filters.
-        </p>
-      ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
-          {expenses.map((e) => (
-            <li key={e.id}>
-              <Link
-                href={`/expenses/${e.id}`}
-                className="flex items-start justify-between gap-3 p-3 hover:bg-muted/50"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatDate(e.date)}</span>
-                    {e.categories?.name ? (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-                        {e.categories.name}
-                      </span>
-                    ) : null}
-                  </div>
-                  {e.merchant ? (
-                    <p className="truncate text-sm font-medium">{e.merchant}</p>
-                  ) : null}
-                  {e.notes ? (
-                    <p className="truncate text-xs text-muted-foreground">{e.notes}</p>
-                  ) : null}
-                </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums">
-                  {formatAmount(e.amount)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+        <div className="hidden md:flex max-w-[760px] mx-auto w-full px-10 pt-10 items-center justify-between mb-8">
+          <div>
+            <div className="font-serif italic text-stone-100 text-[36px] leading-none tracking-tight">
+              Ledger
+            </div>
+            <div className="text-stone-500 text-[13px] mt-1.5 tracking-tight">
+              Daily spending, all in one place.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/expenses/scan"
+              className="h-10 px-4 rounded-xl border border-white/10 text-stone-200 text-[13px] tracking-tight hover:border-white/25 transition flex items-center gap-2"
+            >
+              <ScanLine className="w-4 h-4" /> Scan
+            </Link>
+            <Link
+              href="/expenses/new"
+              className="h-10 px-4 rounded-xl bg-stone-100 text-stone-950 text-[13px] font-medium tracking-tight active:scale-[0.98] transition flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add expense
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex-1 pb-32 md:pb-24 md:max-w-[760px] md:mx-auto md:w-full md:px-10">
+          {error ? (
+            <p className="px-6 md:px-0 text-sm text-rose-300/80">
+              Failed to load: {error.message}
+            </p>
+          ) : (
+            <LedgerView
+              expenses={expenses}
+              categories={categories}
+              monthISO={monthISO}
+              selectedDay={selectedDay}
+              activeCategoryId={activeCategoryId}
+              todayISO={todayISO()}
+            />
+          )}
+        </div>
+      </main>
+
+      <MobileBottomBar active="ledger" />
+    </div>
   );
 }

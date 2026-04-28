@@ -5,6 +5,11 @@ const amountFormatter = new Intl.NumberFormat("fr-MA", {
   maximumFractionDigits: 2,
 });
 
+const plainFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   weekday: "short",
   day: "2-digit",
@@ -14,6 +19,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 export function formatAmount(amount: number | string): string {
   const n = typeof amount === "string" ? Number(amount) : amount;
   return amountFormatter.format(n);
+}
+
+export function formatAmountPlain(amount: number | string): string {
+  const n = typeof amount === "string" ? Number(amount) : amount;
+  return plainFormatter.format(Number.isFinite(n) ? n : 0);
 }
 
 export function formatDate(date: string): string {
@@ -40,5 +50,30 @@ export function currentMonthRange(): { from: string; to: string } {
   return {
     from: `${y}-${pad(m + 1)}-01`,
     to: `${y}-${pad(m + 1)}-${pad(lastDay)}`,
+  };
+}
+
+export function currentMonthISO(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+}
+
+export function monthRangeFromISO(monthISO: string): {
+  year: number;
+  month: number; // 1-12
+  daysInMonth: number;
+  from: string;
+  to: string;
+} {
+  const [y, m] = monthISO.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const lastDay = new Date(y, m, 0).getDate();
+  return {
+    year: y,
+    month: m,
+    daysInMonth: lastDay,
+    from: `${y}-${pad(m)}-01`,
+    to: `${y}-${pad(m)}-${pad(lastDay)}`,
   };
 }
