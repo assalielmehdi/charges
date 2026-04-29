@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Home as HomeIcon,
   LogOut,
+  Repeat,
   ScanLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,11 @@ export function DesktopSidebar({
           href="/expenses/scan"
           icon={<ScanLine className="w-4 h-4" />}
           label="Scan receipt"
+        />
+        <SidebarLink
+          href="/recurring"
+          icon={<Repeat className="w-4 h-4" />}
+          label="Recurring"
         />
       </div>
 

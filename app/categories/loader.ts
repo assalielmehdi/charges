@@ -9,6 +9,7 @@ export type CategoryRow = { id: string; name: string };
 export type CategoriesData = {
   categories: CategoryRow[];
   expenseCounts: Record<string, number>;
+  recurringCounts: Record<string, number>;
 };
 
 export async function loadCategoriesData(): Promise<CategoriesData> {
@@ -18,12 +19,14 @@ export async function loadCategoriesData(): Promise<CategoriesData> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: categories }, { data: countRows }] = await Promise.all([
+  const [{ data: categories }, { data: countRows }, { data: recurringRows }] =
+    await Promise.all([
     supabase
       .from("categories")
       .select("id, name")
       .order("sort_order", { ascending: true }),
     supabase.from("expenses").select("category_id").limit(10000),
+    supabase.from("recurring_expense_templates").select("category_id").limit(10000),
   ]);
 
   const expenseCounts: Record<string, number> = {};
@@ -31,9 +34,15 @@ export async function loadCategoriesData(): Promise<CategoriesData> {
     const id = (row as { category_id: string }).category_id;
     expenseCounts[id] = (expenseCounts[id] ?? 0) + 1;
   }
+  const recurringCounts: Record<string, number> = {};
+  for (const row of recurringRows ?? []) {
+    const id = (row as { category_id: string }).category_id;
+    recurringCounts[id] = (recurringCounts[id] ?? 0) + 1;
+  }
 
   return {
     categories: (categories ?? []) as CategoryRow[],
     expenseCounts,
+    recurringCounts,
   };
 }

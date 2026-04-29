@@ -15,7 +15,10 @@ export type ExpenseDetail = {
   merchant: string | null;
   notes: string | null;
   photo_path: string | null;
-  source: "scan" | "manual";
+  source: "scan" | "manual" | "recurring";
+  recurring_template_id: string | null;
+  recurrence_month: string | null;
+  recurring_overridden_at: string | null;
 };
 
 export type ExpenseDetailData = {
@@ -36,7 +39,7 @@ export async function loadExpenseDetail(id: string): Promise<ExpenseDetailData> 
     supabase
       .from("expenses")
       .select(
-        "id, amount, date, category_id, merchant, notes, photo_path, source",
+        "id, amount, date, category_id, merchant, notes, photo_path, source, recurring_template_id, recurrence_month, recurring_overridden_at",
       )
       .eq("id", id)
       .maybeSingle(),

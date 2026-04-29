@@ -82,14 +82,24 @@ export async function deleteCategory(
   if (error) {
     // 23503 = foreign_key_violation — category is referenced by expenses.
     if (error.code === "23503") {
-      const { count } = await supabase
-        .from("expenses")
-        .select("id", { count: "exact", head: true })
-        .eq("category_id", id);
-      const n = count ?? 0;
+      const [{ count: expenseCount }, { count: recurringCount }] = await Promise.all([
+        supabase
+          .from("expenses")
+          .select("id", { count: "exact", head: true })
+          .eq("category_id", id),
+        supabase
+          .from("recurring_expense_templates")
+          .select("id", { count: "exact", head: true })
+          .eq("category_id", id),
+      ]);
+      const n = expenseCount ?? 0;
+      const recurring = recurringCount ?? 0;
       return {
         ok: false,
-        message: `${n} ${n === 1 ? "expense uses" : "expenses use"} this category — reassign first.`,
+        message:
+          recurring > 0
+            ? `${recurring} recurring ${recurring === 1 ? "template uses" : "templates use"} this category — reassign first.`
+            : `${n} ${n === 1 ? "expense uses" : "expenses use"} this category — reassign first.`,
       };
     }
     return { ok: false, message: `Delete failed: ${error.message}` };

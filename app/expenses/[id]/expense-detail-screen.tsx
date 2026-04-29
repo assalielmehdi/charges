@@ -10,6 +10,7 @@ import {
   FileText,
   Pencil,
   Plus,
+  Repeat,
   Sparkles,
   Store,
   Trash2,
@@ -79,6 +80,16 @@ function formatAmountDate(iso: string, todayIso: string): string {
   });
 }
 
+function recurrenceDateBounds(recurrenceMonth: string): { min: string; max: string } {
+  const [y, m] = recurrenceMonth.slice(0, 7).split("-").map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const month = String(m).padStart(2, "0");
+  return {
+    min: `${y}-${month}-01`,
+    max: `${y}-${month}-${String(lastDay).padStart(2, "0")}`,
+  };
+}
+
 export function ExpenseDetailScreen({
   expense,
   photoUrl,
@@ -122,7 +133,7 @@ export function ExpenseDetailScreen({
       />
       {confirmDelete && (
         <DeleteSheet
-          expenseId={expense.id}
+          expense={expense}
           onClose={() => setConfirmDelete(false)}
           onDeleted={() => {
             router.push("/");
@@ -218,10 +229,18 @@ function DetailView({
           )}
           <DetailRow
             label="Source"
-            value={expense.source === "scan" ? "Scanned receipt" : "Manual entry"}
+            value={
+              expense.source === "scan"
+                ? "Scanned receipt"
+                : expense.source === "recurring"
+                  ? "Recurring expense"
+                  : "Manual entry"
+            }
             icon={
               expense.source === "scan" ? (
                 <Sparkles className="w-3.5 h-3.5" />
+              ) : expense.source === "recurring" ? (
+                <Repeat className="w-3.5 h-3.5" />
               ) : (
                 <Pencil className="w-3.5 h-3.5" />
               )
@@ -318,6 +337,9 @@ function EditView({
   const [merchant, setMerchant] = useState(expense.merchant ?? "");
   const [notes, setNotes] = useState(expense.notes ?? "");
   const [showNotes, setShowNotes] = useState(!!expense.notes);
+  const dateBounds = expense.recurrence_month
+    ? recurrenceDateBounds(expense.recurrence_month)
+    : null;
 
   useEffect(() => {
     if (state?.ok) onSaved();
@@ -372,6 +394,8 @@ function EditView({
           <input
             type="date"
             value={date}
+            min={dateBounds?.min}
+            max={dateBounds?.max}
             onChange={(e) => e.target.value && setDate(e.target.value)}
             className="absolute inset-0 w-full opacity-0 cursor-pointer"
             aria-label="Date"
@@ -454,15 +478,15 @@ function DeleteButton() {
 }
 
 function DeleteSheet({
-  expenseId,
+  expense,
   onClose,
   onDeleted,
 }: {
-  expenseId: string;
+  expense: ExpenseDetail;
   onClose: () => void;
   onDeleted: () => void;
 }) {
-  const remove = deleteExpense.bind(null, expenseId);
+  const remove = deleteExpense.bind(null, expense.id);
   const [state, formAction] = useFormState(remove, initialState);
 
   useEffect(() => {
@@ -472,10 +496,12 @@ function DeleteSheet({
   return (
     <Sheet onClose={onClose}>
       <div className="font-serif italic text-stone-100 text-[26px] leading-tight">
-        Delete this entry?
+        {expense.source === "recurring" ? "Delete this month only?" : "Delete this entry?"}
       </div>
       <div className="text-stone-400 text-[13px] mt-2 leading-relaxed">
-        This is permanent. There&rsquo;s no version history.
+        {expense.source === "recurring"
+          ? "The template stays active. This month will be skipped so it is not recreated."
+          : "This is permanent. There&rsquo;s no version history."}
       </div>
       {state?.message && !state.ok ? (
         <p className="text-[13px] text-rose-300/80 tracking-tight mt-3">

@@ -18,7 +18,9 @@ type ExpenseRow = {
   merchant: string | null;
   notes: string | null;
   category_id: string;
-  source: "manual" | "scan";
+  source: "manual" | "scan" | "recurring";
+  recurring_template_id: string | null;
+  recurrence_month: string | null;
 };
 
 function pickParam(v: string | string[] | undefined): string | null {
@@ -42,6 +44,10 @@ export default async function Home({
   const monthISO = pickParam(searchParams.month) ?? currentMonthISO();
   const range = monthRangeFromISO(monthISO);
   const activeCategoryId = pickParam(searchParams.category);
+  const { error: recurringError } = await supabase.rpc(
+    "ensure_recurring_expenses_for_month",
+    { target_month: range.from },
+  );
 
   const [{ data: catRows }, { data: expensesData, error }] = await Promise.all([
     supabase
@@ -50,7 +56,7 @@ export default async function Home({
       .order("sort_order", { ascending: true }),
     supabase
       .from("expenses")
-      .select("id, amount, date, merchant, notes, category_id, source")
+      .select("id, amount, date, merchant, notes, category_id, source, recurring_template_id, recurrence_month")
       .gte("date", range.from)
       .lte("date", range.to)
       .order("date", { ascending: false })
@@ -103,9 +109,9 @@ export default async function Home({
         </div>
 
         <div className="flex-1 pb-32 md:pb-24 md:max-w-[760px] md:mx-auto md:w-full md:px-10">
-          {error ? (
+          {recurringError || error ? (
             <p className="px-6 md:px-0 text-sm text-rose-300/80">
-              Failed to load: {error.message}
+              Failed to load: {(recurringError ?? error)?.message}
             </p>
           ) : (
             <LedgerView

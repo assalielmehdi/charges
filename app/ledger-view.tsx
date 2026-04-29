@@ -3,7 +3,7 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Repeat } from "lucide-react";
 import { CategoryGlyph } from "@/components/ui/category-glyph";
 import { DottedDivider } from "@/components/ui/dotted-divider";
 import { HeroAmount } from "@/components/ui/hero-amount";
@@ -20,7 +20,9 @@ type Expense = {
   merchant: string | null;
   notes: string | null;
   category_id: string;
-  source: "manual" | "scan";
+  source: "manual" | "scan" | "recurring";
+  recurring_template_id: string | null;
+  recurrence_month: string | null;
 };
 
 type Category = { id: string; name: string };
@@ -196,13 +198,19 @@ export function LedgerView({
                       scanned={e.source === "scan"}
                     />
                     <div className="flex-1 text-left min-w-0">
-                      <div className="text-stone-100 text-[14.5px] tracking-tight truncate">
-                        {e.merchant ?? (
-                          <span className="text-stone-500">No merchant</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {e.source === "recurring" && (
+                          <Repeat className="w-3 h-3 text-stone-500 shrink-0" />
                         )}
+                        <div className="text-stone-100 text-[14.5px] tracking-tight truncate">
+                          {e.merchant ?? (
+                            <span className="text-stone-500">No merchant</span>
+                          )}
+                        </div>
                       </div>
                       <div className="text-stone-500 text-[12px] tracking-tight truncate">
                         {c?.name ?? "—"}
+                        {e.source === "recurring" ? " · Recurring" : ""}
                         {e.notes ? ` · ${e.notes}` : ""}
                       </div>
                     </div>

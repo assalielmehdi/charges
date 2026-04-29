@@ -29,9 +29,11 @@ type EditTarget = CategoryRow | "new" | null;
 export function CategoriesScreen({
   categories,
   expenseCounts,
+  recurringCounts,
 }: {
   categories: CategoryRow[];
   expenseCounts: Record<string, number>;
+  recurringCounts: Record<string, number>;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<EditTarget>(null);
@@ -59,7 +61,8 @@ export function CategoriesScreen({
         <div className="mt-7 space-y-1">
           {categories.map((c) => {
             const count = expenseCounts[c.id] ?? 0;
-            const inUse = count > 0;
+            const recurringCount = recurringCounts[c.id] ?? 0;
+            const inUse = count > 0 || recurringCount > 0;
             return (
               <div
                 key={c.id}
@@ -73,6 +76,9 @@ export function CategoriesScreen({
                   </div>
                   <div className="text-stone-500 text-[11.5px] tracking-tight">
                     {count} {count === 1 ? "entry" : "entries"}
+                    {recurringCount > 0
+                      ? ` · ${recurringCount} recurring`
+                      : ""}
                     {!inUse && (
                       <span className="text-stone-600"> · safe to delete</span>
                     )}
@@ -108,7 +114,10 @@ export function CategoriesScreen({
       {editing && editing !== "new" && (
         <EditCategorySheet
           category={editing}
-          inUse={(expenseCounts[editing.id] ?? 0) > 0}
+          inUse={
+            (expenseCounts[editing.id] ?? 0) > 0 ||
+            (recurringCounts[editing.id] ?? 0) > 0
+          }
           onClose={() => setEditing(null)}
         />
       )}

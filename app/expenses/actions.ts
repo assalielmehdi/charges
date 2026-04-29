@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { monthRange, SKIP_REASONS } from "@/lib/recurring";
 
 // All actions return state instead of redirecting. The intercepted-modal
 // route can't reliably close itself when a server action redirects from
@@ -69,15 +70,41 @@ export async function updateExpense(
   if (typeof parsed === "string") return { ok: false, message: parsed };
 
   const supabase = createClient(cookies());
+  const { data: existing, error: loadError } = await supabase
+    .from("expenses")
+    .select("source, recurrence_month")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, message: `Save failed: ${loadError.message}` };
+  if (!existing) return { ok: false, message: "Expense not found." };
+
+  const patch: Record<string, unknown> = {
+    amount: parsed.amount,
+    date: parsed.date,
+    category_id: parsed.categoryId,
+    merchant: parsed.merchant,
+    notes: parsed.notes,
+  };
+
+  if (existing.source === "recurring") {
+    const recurrenceMonth = existing.recurrence_month as string | null;
+    if (!recurrenceMonth) {
+      return { ok: false, message: "Recurring metadata is missing." };
+    }
+    const range = monthRange(recurrenceMonth);
+    if (parsed.date < range.from || parsed.date > range.to) {
+      return {
+        ok: false,
+        message: "Recurring expenses can only move within their recurrence month.",
+      };
+    }
+    patch.recurring_overridden_at = new Date().toISOString();
+  }
+
   const { error } = await supabase
     .from("expenses")
-    .update({
-      amount: parsed.amount,
-      date: parsed.date,
-      category_id: parsed.categoryId,
-      merchant: parsed.merchant,
-      notes: parsed.notes,
-    })
+    .update(patch)
     .eq("id", id);
 
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
@@ -95,6 +122,34 @@ export async function deleteExpense(
   void _prev;
   void _formData;
   const supabase = createClient(cookies());
+  const { data: existing, error: loadError } = await supabase
+    .from("expenses")
+    .select("source, recurring_template_id, recurrence_month")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (loadError) {
+    return { ok: false, message: `Delete failed: ${loadError.message}` };
+  }
+  if (!existing) return { ok: false, message: "Expense not found." };
+
+  if (
+    existing.source === "recurring" &&
+    existing.recurring_template_id &&
+    existing.recurrence_month
+  ) {
+    const { error: skipError } = await supabase
+      .from("recurring_expense_skips")
+      .upsert({
+        recurring_template_id: existing.recurring_template_id,
+        recurrence_month: existing.recurrence_month,
+        reason: SKIP_REASONS.deletedGeneratedExpense,
+      }, { onConflict: "recurring_template_id,recurrence_month" });
+    if (skipError) {
+      return { ok: false, message: `Delete failed: ${skipError.message}` };
+    }
+  }
+
   const { error } = await supabase.from("expenses").delete().eq("id", id);
   if (error) {
     return { ok: false, message: `Delete failed: ${error.message}` };
