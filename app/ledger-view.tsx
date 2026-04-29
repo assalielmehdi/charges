@@ -61,7 +61,6 @@ export function LedgerView({
   }, [expenses, activeCategoryId]);
 
   const total = filtered.reduce((s, e) => s + Number(e.amount), 0);
-  const avg = filtered.length ? total / filtered.length : 0;
 
   const groupsByDate = useMemo(() => {
     const map = new Map<string, Expense[]>();
@@ -110,7 +109,7 @@ export function LedgerView({
   }
 
   return (
-    <div className="pt-3 md:pt-0">
+    <div className="pt-[calc(env(safe-area-inset-top)+1.25rem)] md:pt-0">
       <div className="flex items-center justify-between px-6 md:px-0">
         <button
           type="button"
@@ -145,17 +144,6 @@ export function LedgerView({
         <SectionLabel>Total this month</SectionLabel>
         <div className="mt-2">
           <HeroAmount value={total} size="lg" />
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-[12px] text-stone-500 tracking-tight flex-wrap">
-          <span>
-            {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
-          </span>
-          {filtered.length > 0 && (
-            <>
-              <span className="w-1 h-1 rounded-full bg-stone-700" />
-              <span>avg {formatAmountPlain(avg)}</span>
-            </>
-          )}
         </div>
       </div>
 

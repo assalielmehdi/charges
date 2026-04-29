@@ -49,25 +49,10 @@ export function CategoriesScreen({
           </IconButton>
         }
         label="Categories"
-        right={
-          <IconButton
-            type="button"
-            variant="filled"
-            onClick={() => setEditing("new")}
-            aria-label="Add category"
-          >
-            <Plus className="w-4 h-4" />
-          </IconButton>
-        }
       />
 
       <div className="flex-1 overflow-y-auto px-6 pt-3 pb-6">
-        <h1 className="font-serif italic text-stone-100 text-[40px] leading-[1.05] tracking-tight">
-          Tags to sort
-          <br />
-          <span className="text-stone-500">it all.</span>
-        </h1>
-        <p className="mt-3 text-stone-400 text-[13.5px] leading-relaxed">
+        <p className="text-stone-400 text-[13.5px] leading-relaxed">
           One category per expense. In-use categories can&rsquo;t be deleted.
         </p>
 

@@ -5,7 +5,6 @@ import { Plus, ScanLine } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { currentMonthISO, monthRangeFromISO, todayISO } from "@/lib/format";
 import { DesktopSidebar } from "@/components/shell/desktop-sidebar";
-import { MobileTopBar } from "@/components/shell/mobile-top-bar";
 import { MobileBottomBar } from "@/components/shell/mobile-bottom-bar";
 import { LedgerView } from "./ledger-view";
 import { logout } from "./login/actions";
@@ -78,8 +77,6 @@ export default async function Home({
       />
 
       <main className="flex flex-col min-h-screen md:h-screen md:overflow-y-auto relative">
-        <MobileTopBar logoutAction={logout} />
-
         <div className="hidden md:flex max-w-[760px] mx-auto w-full px-10 pt-10 items-center justify-between mb-8">
           <div>
             <div className="font-serif italic text-stone-100 text-[36px] leading-none tracking-tight">

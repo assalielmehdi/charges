@@ -10,7 +10,6 @@ import {
   FileText,
   Plus,
   Store,
-  X,
 } from "lucide-react";
 import { CategoryDot } from "@/components/ui/category-dot";
 import { FormField } from "@/components/ui/form-field";
@@ -78,23 +77,6 @@ export function NewExpenseScreen({
   const [notes, setNotes] = useState("");
   const [showNotes, setShowNotes] = useState(false);
 
-  function press(k: string) {
-    if (k === "del") {
-      setAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : "0"));
-      return;
-    }
-    if (k === "." && amount.includes(".")) return;
-    if (amount === "0" && k !== ".") {
-      setAmount(k);
-      return;
-    }
-    setAmount((prev) => prev + k);
-  }
-
-  const [whole, dec] = amount.includes(".")
-    ? amount.split(".")
-    : [amount, null];
-
   return (
     <form
       action={formAction}
@@ -108,13 +90,13 @@ export function NewExpenseScreen({
 
       <ScreenHeader
         label="New expense"
-        right={
+        left={
           <IconButton
             type="button"
             onClick={() => router.back()}
-            aria-label="Close"
+            aria-label="Back"
           >
-            <X className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
           </IconButton>
         }
       />
@@ -123,7 +105,6 @@ export function NewExpenseScreen({
         <div className="mt-2">
           <SectionLabel>Amount</SectionLabel>
           <div className="mt-1 flex items-baseline gap-2">
-            {/* Desktop: typeable input */}
             <input
               inputMode="decimal"
               value={amount}
@@ -131,15 +112,9 @@ export function NewExpenseScreen({
                 const v = e.target.value;
                 if (/^[0-9]*\.?[0-9]*$/.test(v)) setAmount(v || "0");
               }}
-              className="hidden md:block font-serif italic text-stone-100 text-[80px] leading-[0.95] tracking-tight bg-transparent outline-none w-full max-w-[260px]"
+              aria-label="Amount"
+              className="font-serif italic text-stone-100 text-[80px] leading-[0.95] tracking-tight bg-transparent outline-none w-full max-w-[260px] border-b border-transparent focus:border-white/20 transition"
             />
-            {/* Mobile: span driven by numpad */}
-            <span className="md:hidden font-serif italic text-stone-100 text-[80px] leading-[0.95] tracking-tight">
-              {whole}
-              {dec !== null && (
-                <span className="text-stone-500">.{dec}</span>
-              )}
-            </span>
             <span className="text-stone-500 text-[15px] tracking-[0.15em]">
               MAD
             </span>
@@ -214,26 +189,6 @@ export function NewExpenseScreen({
         </div>
 
         <div className="flex-1" />
-      </div>
-
-      {/* Numpad — mobile only */}
-      <div className="md:hidden px-5 pb-3 grid grid-cols-3 gap-1.5">
-        {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"].map(
-          (k) => (
-            <button
-              type="button"
-              key={k}
-              onClick={() => press(k)}
-              className="h-12 rounded-xl text-stone-100 text-[20px] font-light tracking-tight hover:bg-white/[0.04] active:bg-white/[0.08] transition flex items-center justify-center"
-            >
-              {k === "del" ? (
-                <ArrowLeft className="w-4 h-4 text-stone-400" />
-              ) : (
-                k
-              )}
-            </button>
-          ),
-        )}
       </div>
 
       {state?.message && !state.ok ? (

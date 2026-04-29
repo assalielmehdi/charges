@@ -13,7 +13,6 @@ import {
   Sparkles,
   Store,
   Trash2,
-  X,
 } from "lucide-react";
 import { CategoryDot } from "@/components/ui/category-dot";
 import { DottedDivider } from "@/components/ui/dotted-divider";
@@ -164,21 +163,6 @@ function DetailView({
             <ArrowLeft className="w-4 h-4" />
           </IconButton>
         }
-        right={
-          <div className="flex gap-2">
-            <IconButton type="button" onClick={onEdit} aria-label="Edit">
-              <Pencil className="w-4 h-4" />
-            </IconButton>
-            <IconButton
-              type="button"
-              variant="danger"
-              onClick={onDeleteRequest}
-              aria-label="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </IconButton>
-          </div>
-        }
       />
 
       <div className="flex-1 overflow-y-auto px-6 pt-4 pb-8">
@@ -255,6 +239,23 @@ function DetailView({
           <SectionLabel className="mt-3">
             id · {expense.id.slice(0, 8)}
           </SectionLabel>
+        </div>
+
+        <div className="mt-6 space-y-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="w-full py-3.5 rounded-2xl border border-dashed border-white/15 text-stone-300 text-[13.5px] tracking-tight hover:bg-white/[0.02] flex items-center justify-center gap-2 transition"
+          >
+            <Pencil className="w-4 h-4" /> Edit expense
+          </button>
+          <button
+            type="button"
+            onClick={onDeleteRequest}
+            className="w-full py-3.5 rounded-2xl border border-dashed border-rose-300/20 text-rose-300/80 text-[13.5px] tracking-tight hover:bg-rose-300/[0.04] flex items-center justify-center gap-2 transition"
+          >
+            <Trash2 className="w-4 h-4" /> Delete expense
+          </button>
         </div>
       </div>
     </div>
@@ -337,7 +338,7 @@ function EditView({
         label="Edit expense"
         left={
           <IconButton type="button" onClick={onCancel} aria-label="Cancel">
-            <X className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
           </IconButton>
         }
       />

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, Camera, Loader, Upload } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -65,13 +65,13 @@ export function ScanCaptureScreen() {
     <div className="flex flex-col flex-1 min-h-0 w-full">
       <ScreenHeader
         label={pending ? "Reading receipt" : "Scan receipt"}
-        right={
+        left={
           <IconButton
             type="button"
             onClick={() => router.back()}
-            aria-label="Close"
+            aria-label="Back"
           >
-            <X className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
           </IconButton>
         }
       />
@@ -123,20 +123,8 @@ function CaptureView({
   error: string | null;
 }) {
   return (
-    <div className="flex-1 px-6 flex flex-col overflow-y-auto pb-6">
-      <div className="mt-6">
-        <h2 className="font-serif italic text-stone-100 text-[42px] leading-[1.05] tracking-tight">
-          Snap it.
-          <br />
-          <span className="text-stone-500">We&rsquo;ll read it.</span>
-        </h2>
-        <p className="mt-3 text-stone-400 text-[14px] leading-relaxed max-w-[320px]">
-          We&rsquo;ll extract amount, merchant and date. You confirm before
-          anything is saved.
-        </p>
-      </div>
-
-      <div className="mt-8 grid grid-cols-2 gap-3">
+    <div className="flex-1 px-6 flex flex-col justify-center overflow-y-auto py-6">
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={onCamera}
@@ -168,20 +156,6 @@ function CaptureView({
           {error}
         </p>
       ) : null}
-
-      <div className="mt-8 border border-white/[0.06] rounded-2xl p-4 flex gap-3">
-        <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0">
-          <Sparkles className="w-4 h-4 text-stone-300" />
-        </div>
-        <div>
-          <div className="text-[13px] text-stone-100 tracking-tight">
-            Reviewed before saved
-          </div>
-          <div className="text-[12px] text-stone-500 leading-relaxed mt-0.5">
-            AI suggests fields. Nothing is logged until you confirm.
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
