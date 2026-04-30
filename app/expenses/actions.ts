@@ -9,7 +9,11 @@ import { monthRange, SKIP_REASONS } from "@/lib/recurring";
 // route can't reliably close itself when a server action redirects from
 // inside the @modal slot — the client navigates instead.
 
-export type ExpenseActionState = { ok: boolean; message: string | null };
+export type ExpenseActionState = {
+  ok: boolean;
+  message: string | null;
+  redirectMonth?: string;
+};
 
 type ParsedFields = {
   amount: number;
@@ -58,7 +62,7 @@ export async function createExpense(
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
 
   revalidatePath("/");
-  return { ok: true, message: null };
+  return { ok: true, message: null, redirectMonth: parsed.date.slice(0, 7) };
 }
 
 export async function updateExpense(

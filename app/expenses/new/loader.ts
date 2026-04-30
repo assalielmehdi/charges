@@ -3,7 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { todayISO } from "@/lib/format";
+import { currentMonthISO, monthRangeFromISO, todayISO } from "@/lib/format";
 
 export type NewExpenseData = {
   categories: { id: string; name: string }[];
@@ -12,7 +12,20 @@ export type NewExpenseData = {
   todayISO: string;
 };
 
-export async function loadNewExpenseData(): Promise<NewExpenseData> {
+function normalizeMonthParam(month: string | undefined): string | null {
+  const value = month?.trim();
+  if (!value || !/^\d{4}-\d{2}$/.test(value)) return null;
+  const [, rawMonth] = value.split("-").map(Number);
+  if (rawMonth < 1 || rawMonth > 12) return null;
+  return value;
+}
+
+function defaultDateForMonth(month: string | null, today: string): string {
+  if (!month || month === currentMonthISO()) return today;
+  return monthRangeFromISO(month).from;
+}
+
+export async function loadNewExpenseData(month?: string): Promise<NewExpenseData> {
   const supabase = createClient(cookies());
 
   const {
@@ -38,11 +51,12 @@ export async function loadNewExpenseData(): Promise<NewExpenseData> {
     cats.find((c) => c.name === "Other")?.id ?? cats[0]?.id ?? "";
   const defaultCategoryId = lastExpense?.category_id ?? fallback;
   const today = todayISO();
+  const targetMonth = normalizeMonthParam(month);
 
   return {
     categories: cats,
     defaultCategoryId,
-    defaultDate: today,
+    defaultDate: defaultDateForMonth(targetMonth, today),
     todayISO: today,
   };
 }

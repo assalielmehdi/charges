@@ -136,8 +136,7 @@ export function ExpenseDetailScreen({
           expense={expense}
           onClose={() => setConfirmDelete(false)}
           onDeleted={() => {
-            router.push("/");
-            router.refresh();
+            router.replace("/");
           }}
         />
       )}

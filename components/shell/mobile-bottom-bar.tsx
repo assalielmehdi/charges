@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { FolderOpen, Home as HomeIcon, Plus, Repeat, ScanLine } from "lucide-react";
@@ -16,8 +17,11 @@ export function MobileBottomBar({
 }: {
   active?: "ledger" | "categories" | "recurring";
 }) {
+  const searchParams = useSearchParams();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const showExpenseActions = active === "ledger";
+  const month = searchParams.get("month");
+  const addHref = month ? `/expenses/new?month=${encodeURIComponent(month)}` : "/expenses/new";
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-20">
@@ -29,7 +33,7 @@ export function MobileBottomBar({
                 className="absolute bottom-[calc(100%+10px)] right-0 min-w-40 overflow-hidden rounded-2xl border border-white/10 bg-stone-950/95 shadow-2xl shadow-black/50 backdrop-blur-xl"
                 role="menu"
               >
-                <ActionLink href="/expenses/new" onClick={() => setIsActionsOpen(false)}>
+                <ActionLink href={addHref} onClick={() => setIsActionsOpen(false)}>
                   <Plus className="w-4 h-4" strokeWidth={2.2} />
                   <span>Add</span>
                 </ActionLink>

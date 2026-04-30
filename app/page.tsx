@@ -100,7 +100,7 @@ export default async function Home({
               <ScanLine className="w-4 h-4" /> Scan
             </Link>
             <Link
-              href="/expenses/new"
+              href={`/expenses/new?month=${monthISO}`}
               className="h-10 px-4 rounded-xl bg-stone-100 text-stone-950 text-[13px] font-medium tracking-tight active:scale-[0.98] transition flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Add expense

@@ -87,7 +87,7 @@ export async function saveScanned(
   if (error) return { ok: false, message: `Save failed: ${error.message}` };
 
   revalidatePath("/");
-  return { ok: true, message: null };
+  return { ok: true, message: null, redirectMonth: parsed.date.slice(0, 7) };
 }
 
 export async function discardScan(

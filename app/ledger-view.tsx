@@ -55,7 +55,6 @@ export function LedgerView({
 
   const [year, month] = monthISO.split("-").map(Number);
   const [todayY, todayM, todayD] = todayISO.split("-").map(Number);
-  const canGoNext = !(year === todayY && month >= todayM);
 
   const filtered = useMemo(() => {
     if (!activeCategoryId) return expenses;
@@ -132,13 +131,10 @@ export function LedgerView({
         <button
           type="button"
           onClick={() => changeMonth(1)}
-          disabled={!canGoNext}
-          className="w-8 h-8 rounded-full hover:bg-white/[0.04] flex items-center justify-center text-stone-400 transition disabled:hover:bg-transparent"
+          className="w-8 h-8 rounded-full hover:bg-white/[0.04] flex items-center justify-center text-stone-400 transition"
           aria-label="Next month"
         >
-          <ChevronRight
-            className={cn("w-4 h-4", !canGoNext && "opacity-30")}
-          />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 

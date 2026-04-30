@@ -160,8 +160,10 @@ export function ScanReviewScreen({
   useEffect(() => {
     if (saveState?.ok || discardState?.ok) {
       sessionStorage.removeItem(`scan:${scanId}`);
-      router.push("/");
-      router.refresh();
+      const target = saveState?.redirectMonth
+        ? `/?month=${saveState.redirectMonth}`
+        : "/";
+      router.replace(target);
     }
   }, [saveState, discardState, router, scanId]);
 
