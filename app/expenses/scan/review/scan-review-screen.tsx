@@ -163,9 +163,9 @@ export function ScanReviewScreen({
       const target = saveState?.redirectMonth
         ? `/?month=${saveState.redirectMonth}`
         : "/";
-      router.replace(target);
+      window.location.assign(target);
     }
-  }, [saveState, discardState, router, scanId]);
+  }, [saveState, discardState, scanId]);
 
   if (!hydrated) {
     return (

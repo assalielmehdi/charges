@@ -66,9 +66,9 @@ export function NewExpenseScreen({
   useEffect(() => {
     if (state?.ok) {
       const target = state.redirectMonth ? `/?month=${state.redirectMonth}` : "/";
-      router.replace(target);
+      window.location.assign(target);
     }
-  }, [state, router]);
+  }, [state]);
 
   const [amount, setAmount] = useState("0");
   const [date, setDate] = useState(defaultDate);
